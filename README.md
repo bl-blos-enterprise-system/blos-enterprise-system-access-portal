@@ -1,4 +1,6 @@
 # BES Access Portal
+
+La raíz pública muestra la biblioteca documental completa de los 14 pilares BES sin exigir una cuenta. El acceso administrativo continúa protegido mediante Supabase Auth.
 Portal de acceso del BLOS Enterprise System para Best Linen.
 
 ## Seguridad

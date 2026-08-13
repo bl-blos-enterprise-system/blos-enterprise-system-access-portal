@@ -210,9 +210,27 @@
     @media(max-width:700px){.library-toolbar{grid-template-columns:1fr}.pillar-catalog,.library-kpis,.inventory-metrics{grid-template-columns:1fr}}
     @media(max-width:520px){.philosophy-grid,.integration-strip{grid-template-columns:1fr}}
   </style>
+  <style>
+    .public-library{min-height:100vh;background:var(--bg);color:var(--text)}
+    .public-header{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px clamp(18px,5vw,72px);background:#07111f;color:#fff;border-bottom:3px solid #d5af69;position:sticky;top:0;z-index:10}
+    .public-brand{display:flex;align-items:center;gap:14px}.public-brand img{width:58px;height:58px;object-fit:cover;border-radius:10px}.public-brand b{display:block;font-size:18px}.public-brand small{color:#c8d5e2}
+    .public-main{max-width:1440px;margin:auto;padding:clamp(24px,5vw,64px)}.public-hero{margin-bottom:24px}.public-hero h1{margin:5px 0 9px;font-size:clamp(30px,5vw,54px)}.public-hero p{max-width:850px;color:var(--muted);line-height:1.6}
+    .public-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.public-status span{padding:7px 10px;border-radius:999px;background:#e4f6ef;color:#087559;font-size:11px;font-weight:850}.public-table td{vertical-align:top}.public-table .document-actions a{text-decoration:none}
+  </style>
 </head>
 <body>
-  <section id="loginView" class="login">
+  <section id="publicView" class="public-library">
+    <header class="public-header"><div class="public-brand"><img src="assets/bes-login-brand.jpg" alt="Best Linen BES"><div><b>BLOS Enterprise System</b><small>Biblioteca documental pública BES</small></div></div><button id="openLogin" class="btn secondary" type="button">Acceso administrativo</button></header>
+    <main class="public-main">
+      <section class="public-hero"><div class="eyebrow">BES MASTER · publicación oficial</div><h1>Documentos de los 14 pilares</h1><p>Consulta pública del catálogo BES, sus versiones vigentes, entregables descargables e inventario consolidado. La publicación no sustituye la aprobación formal indicada en cada registro.</p><div class="public-status"><span>Acceso sin cuenta</span><span>Descarga directa</span><span>14 pilares visibles</span><span>Actualización trazable</span></div></section>
+      <div class="library-kpis"><div class="card stat"><span class="label">Documentos</span><strong id="publicDocumentCount">—</strong><small>Catálogo completo</small></div><div class="card stat"><span class="label">Activos públicos</span><strong id="publicAssetCount">—</strong><small>PDF, HTML, datos y fuentes</small></div><div class="card stat"><span class="label">Pilares</span><strong id="publicPillarCount">—</strong><small>Arquitectura BES</small></div><div class="card stat"><span class="label">En espera</span><strong id="publicPendingCount">—</strong><small>Aprobación formal</small></div></div>
+      <div class="notice" style="margin:0 0 18px"><b>Biblioteca pública activa.</b> Todos los documentos registrados se muestran sin autenticación. Los estados “EN ESPERA DE APROBACIÓN” se conservan hasta contar con evidencia formal.</div>
+      <div class="library-toolbar"><input id="publicDocumentSearch" type="search" placeholder="Buscar por código o título" aria-label="Buscar documentos públicos"><select id="publicPillarFilter" aria-label="Filtrar por pilar"><option value="all">Todos los pilares</option></select><button id="publicRefreshLibrary" class="btn secondary" type="button">Actualizar</button></div>
+      <div id="publicPillarCatalog" class="pillar-catalog" aria-label="Catálogo público de catorce pilares"></div>
+      <div class="card table-wrap"><table class="table public-table"><thead><tr><th>Código</th><th>Documento</th><th>Pilar BES</th><th>Versión</th><th>Estado</th><th>Activos públicos</th></tr></thead><tbody id="publicDocumentRows"></tbody></table><div id="publicDocumentEmpty" class="library-message">Cargando biblioteca pública…</div></div>
+    </main>
+  </section>
+  <section id="loginView" class="login hidden">
     <div class="login-hero">
       <img class="login-brand-visual" src="assets/bes-login-brand.jpg" alt="Best Linen, BLOS Methodology y SIGO-BL">
     </div>

@@ -5,7 +5,7 @@ import {
 
 const { createClient } = globalThis.supabase || {};
 
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.2.0";
 const STORAGE_PREFIX = "besPortalState_v1_7_0";
 const MAX_BACKUP_BYTES = 1_000_000;
 const CONFIG_READY =
@@ -201,6 +201,8 @@ let inventorySnapshot = null;
 let libraryLoading = null;
 let documentSearch = "";
 let documentPillarFilter = "all";
+let publicDocumentSearch = "";
+let publicPillarFilter = "all";
 
 function select(selector) {
   return document.querySelector(selector);
@@ -767,6 +769,18 @@ async function fetchLibrary(url = `${SUPABASE_URL}/functions/v1/bes-document-lib
   return response;
 }
 
+async function fetchPublicCatalog() {
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/bes-public-catalog`, {
+    method: "GET",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      "x-client-info": `bes-access-portal/${APP_VERSION}`,
+    },
+  });
+  if (!response.ok) throw new Error(`Biblioteca pública: error ${response.status}`);
+  return response;
+}
+
 function assetLabel(asset) {
   if (asset.mime_type === "text/html") return "Ver HTML";
   if (asset.mime_type === "text/csv") return "Descargar CSV";
@@ -776,6 +790,10 @@ function assetLabel(asset) {
 }
 
 async function openLibraryAsset(asset, action = "download") {
+  if (asset.public_url) {
+    window.open(asset.public_url, "_blank", "noopener");
+    return;
+  }
   const placeholder = action === "view" ? window.open("", "_blank") : null;
   try {
     if (placeholder) {
@@ -813,6 +831,54 @@ function bindAssetButtons(container = document) {
       if (asset) void openLibraryAsset(asset, button.dataset.assetAction || "download");
     };
   });
+}
+
+function renderPublicLibrary() {
+  const rows = select("#publicDocumentRows");
+  const empty = select("#publicDocumentEmpty");
+  if (!rows || !empty) return;
+  if (!documentLibrary) {
+    rows.innerHTML = "";
+    empty.textContent = libraryLoading ? "Cargando biblioteca pública…" : "No fue posible cargar el catálogo público.";
+    empty.classList.remove("hidden");
+    return;
+  }
+  const documents = documentLibrary.documents.map((document) => ({ ...document, canonicalPillar: canonicalPillarIndex(document) }));
+  const assetCount = documents.reduce((total, document) => total + document.assets.length, 0);
+  const pendingCount = documents.filter((document) => ["pending_approval", "review"].includes(document.status)).length;
+  select("#publicDocumentCount").textContent = String(documents.length);
+  select("#publicAssetCount").textContent = String(assetCount);
+  select("#publicPendingCount").textContent = String(pendingCount);
+  select("#publicPillarCount").textContent = `${new Set(documents.map((document) => document.canonicalPillar)).size}/14`;
+  const pillarSelect = select("#publicPillarFilter");
+  pillarSelect.innerHTML = '<option value="all">Todos los pilares</option>' + MODULES.map((name, index) => `<option value="${index}">Pilar ${String(index).padStart(2, "0")} · ${escapeHTML(name)}</option>`).join("");
+  pillarSelect.value = publicPillarFilter;
+  select("#publicPillarCatalog").innerHTML = MODULES.map((name, index) => {
+    const count = documents.filter((document) => document.canonicalPillar === index).length;
+    return `<button class="pillar-chip ${publicPillarFilter === String(index) ? "active" : ""}" type="button" data-public-pillar="${index}"><span>Pilar ${String(index).padStart(2, "0")}</span><b>${escapeHTML(name)}</b><small>${count} ${count === 1 ? "documento" : "documentos"}</small></button>`;
+  }).join("");
+  selectAll("[data-public-pillar]").forEach((button) => {
+    button.onclick = () => {
+      publicPillarFilter = button.dataset.publicPillar;
+      renderPublicLibrary();
+    };
+  });
+  const needle = publicDocumentSearch.trim().toLowerCase();
+  const filtered = documents.filter((document) =>
+    (publicPillarFilter === "all" || String(document.canonicalPillar) === publicPillarFilter) &&
+    (!needle || `${document.code} ${document.title} ${document.purpose || ""}`.toLowerCase().includes(needle)),
+  );
+  rows.innerHTML = filtered.map((document) => {
+    const approval = documentApproval(document.status);
+    const actions = document.assets.map((asset) => {
+      const action = asset.actions?.view ? "view" : "download";
+      const href = asset.public_url || libraryAssetUrl(asset.id, action);
+      return `<a class="btn secondary" href="${escapeHTML(href)}" target="_blank" rel="noopener">${escapeHTML(assetLabel(asset))}</a>`;
+    }).join("");
+    return `<tr><td><b>${escapeHTML(document.code)}</b></td><td class="document-title"><b>${escapeHTML(document.title)}</b><small>${escapeHTML(document.purpose || document.scope || "Documento controlado BES")}</small></td><td>Pilar ${String(document.canonicalPillar).padStart(2, "0")}<br><small>${escapeHTML(MODULES[document.canonicalPillar])}</small></td><td>${escapeHTML(document.current_version)}</td><td><span class="approval-badge ${approval.className}">${approval.label}</span></td><td><div class="document-actions">${actions || "Sin activo"}</div></td></tr>`;
+  }).join("");
+  empty.classList.toggle("hidden", filtered.length > 0);
+  if (!filtered.length) empty.textContent = "No hay documentos para este filtro.";
 }
 
 function renderDocumentLibrary() {
@@ -917,6 +983,7 @@ async function loadDocumentLibrary({ force = false } = {}) {
         inventorySnapshot = null;
       }
       renderDocumentLibrary();
+      renderPublicLibrary();
       renderInventory();
       renderArchitecture();
       return documentLibrary;
@@ -933,8 +1000,27 @@ async function loadDocumentLibrary({ force = false } = {}) {
     }
   })();
   renderDocumentLibrary();
+  renderPublicLibrary();
   renderInventory();
   return libraryLoading;
+}
+
+async function loadPublicCatalog({ force = false } = {}) {
+  if (documentLibrary && !force) {
+    renderPublicLibrary();
+    return documentLibrary;
+  }
+  try {
+    const response = await fetchPublicCatalog();
+    documentLibrary = await response.json();
+    renderPublicLibrary();
+    return documentLibrary;
+  } catch (error) {
+    documentLibrary = null;
+    renderPublicLibrary();
+    select("#publicDocumentEmpty").textContent = error.message || "No fue posible cargar la biblioteca pública.";
+    return null;
+  }
 }
 
 function roleLabel(membership) {
@@ -991,7 +1077,7 @@ function credentialExpired(membership) {
 }
 
 function showAuthSurface(surface) {
-  const surfaces = ["loginView", "passwordView", "mfaView", "appView"];
+  const surfaces = ["publicView", "loginView", "passwordView", "mfaView", "appView"];
   surfaces.forEach((id) => {
     select(`#${id}`).classList.toggle("hidden", id !== surface);
   });
@@ -1122,7 +1208,7 @@ async function evaluateSession(session) {
   if (!session?.user) {
     clearRuntimeIdentity();
     resetSensitiveForms();
-    showAuthSurface("loginView");
+    showAuthSurface("publicView");
     return;
   }
 
@@ -1532,13 +1618,14 @@ async function signOut() {
   if (state) logEvent("Cerró sesión");
   resetSensitiveForms();
   clearRuntimeIdentity();
-  showAuthSurface("loginView");
+  showAuthSurface("publicView");
   if (supabase) {
     await supabase.auth.signOut({ scope: "local" });
   }
 }
 
 function bindEvents() {
+  select("#openLogin").onclick = () => showAuthSurface("loginView");
   select("#loginForm").addEventListener("submit", signIn);
   select("#demoProfiles").onclick = () =>
     toast("Los accesos se asignan de forma individual por área y puesto");
@@ -1607,6 +1694,15 @@ function bindEvents() {
     renderDocumentLibrary();
   });
   select("#refreshLibrary").onclick = () => void loadDocumentLibrary({ force: true });
+  select("#publicDocumentSearch").addEventListener("input", (event) => {
+    publicDocumentSearch = event.target.value;
+    renderPublicLibrary();
+  });
+  select("#publicPillarFilter").addEventListener("change", (event) => {
+    publicPillarFilter = event.target.value;
+    renderPublicLibrary();
+  });
+  select("#publicRefreshLibrary").onclick = () => void loadPublicCatalog({ force: true });
 }
 
 async function initialize() {
@@ -1622,10 +1718,12 @@ async function initialize() {
     return;
   }
   select("#runtimeNotice").classList.add("hidden");
+  await loadPublicCatalog();
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  await evaluateSession(session);
+  if (session?.user) await evaluateSession(session);
+  else showAuthSurface("publicView");
   supabase.auth.onAuthStateChange((_event, nextSession) => {
     window.setTimeout(() => {
       void evaluateSession(nextSession);
