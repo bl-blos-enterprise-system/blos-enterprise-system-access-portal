@@ -715,7 +715,7 @@ const PILLAR_ALIASES = new Map([
   ["GOV", 0], ["BES", 0], ["BLOS", 1], ["SIGO", 2], ["SIGO-BL", 2],
   ["ALM", 3], ["INV", 3], ["INBOUND", 3], ["OUTBOUND", 3], ["TELAS", 3], ["PT", 3],
   ["ODOO", 4], ["BLR", 5], ["MDC", 6], ["BI", 7], ["AUD", 8], ["MC", 9],
-  ["UBEL", 10], ["CH", 11], ["RH", 11], ["DOC", 12], ["DIR", 13],
+  ["UBEL", 10], ["CH", 11], ["RH", 11], ["RRHH", 11], ["DOC", 12], ["DIR", 13],
 ]);
 
 function canonicalPillarIndex(document) {
@@ -729,7 +729,7 @@ function canonicalPillarIndex(document) {
   const text = `${document?.title || ""} ${document?.module || ""}`.toLowerCase();
   if (/odoo.*rack|rack.*odoo|mapa maestro de datos/.test(text)) return 6;
   if (/inventario|almac[eé]n|inbound|outbound|producto terminado|telas/.test(text)) return 3;
-  if (/talento|puesto|capital humano|raci/.test(text)) return 11;
+  if (/talento|puesto|perfil|recursos humanos|capital humano|raci/.test(text)) return 11;
   if (/auditor|calidad/.test(text)) return 8;
   if (/mejora|kaizen|5s/.test(text)) return 9;
   return 0;
