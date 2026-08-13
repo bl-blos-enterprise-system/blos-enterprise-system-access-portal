@@ -5,7 +5,7 @@ import {
 
 const { createClient } = globalThis.supabase || {};
 
-const APP_VERSION = "2.0.1";
+const APP_VERSION = "2.1.0";
 const STORAGE_PREFIX = "besPortalState_v1_7_0";
 const MAX_BACKUP_BYTES = 1_000_000;
 const CONFIG_READY =
@@ -95,6 +95,7 @@ const TITLES = {
   tasks: "Agenda operativa",
   warehouse: "Almacenes BL1–BL5",
   documents: "Biblioteca documental",
+  inventory: "Inventario consolidado",
   audit: "Auditoría",
   users: "Alta de usuarios",
   settings: "Configuración",
@@ -195,6 +196,11 @@ let enrollmentFactorId = null;
 let challengeFactorId = null;
 let managedUsers = [];
 let managedUsersLoading = false;
+let documentLibrary = null;
+let inventorySnapshot = null;
+let libraryLoading = null;
+let documentSearch = "";
+let documentPillarFilter = "all";
 
 function select(selector) {
   return document.querySelector(selector);
@@ -499,6 +505,7 @@ function showPage(id) {
   select("#sidebar").classList.remove("open");
   window.scrollTo(0, 0);
   if (id === "users") void loadManagedUsers();
+  if (id === "documents" || id === "inventory") void loadDocumentLibrary();
 }
 
 function exportData() {
@@ -583,9 +590,15 @@ function cycleGovernance(index) {
 
 function renderArchitecture() {
   select("#moduleGrid").innerHTML = MODULES.map((name, index) => {
+    const libraryCount = documentLibrary?.documents?.filter(
+      (document) => canonicalPillarIndex(document) === index,
+    ).length;
     const recovered = MODULE_RECOVERY[index];
-    const status =
-      index === 0 ? "En construcción" : recovered?.status || "Pendiente";
+    const status = Number.isFinite(libraryCount)
+      ? `${libraryCount} ${libraryCount === 1 ? "documento visible" : "documentos visibles"}`
+      : index === 0
+        ? "En construcción"
+        : recovered?.status || "Pendiente";
     const detail =
       index === 0
         ? "Define las reglas, arquitectura, autoridad y control de BES."
@@ -596,7 +609,13 @@ function renderArchitecture() {
       index === 0 || recovered
         ? `<button class="btn secondary" data-module-go="${destination}">${index === 0 ? "Abrir módulo" : "Ver evidencia"}</button>`
         : "";
-    const cardClass = index === 0 ? "building" : recovered ? "structured" : "pending";
+    const cardClass = Number.isFinite(libraryCount)
+      ? "structured"
+      : index === 0
+        ? "building"
+        : recovered
+          ? "structured"
+          : "pending";
     return `<article class="card module-card ${cardClass}">
       <span class="module-code">Pilar ${String(index).padStart(2, "0")}</span>
       <h3>${name}</h3>
@@ -686,6 +705,236 @@ function renderAll() {
   renderLinks();
   renderAudit();
   renderArchitecture();
+  renderDocumentLibrary();
+  renderInventory();
+}
+
+const PILLAR_ALIASES = new Map([
+  ["GOV", 0], ["BES", 0], ["BLOS", 1], ["SIGO", 2], ["SIGO-BL", 2],
+  ["ALM", 3], ["INV", 3], ["INBOUND", 3], ["OUTBOUND", 3], ["TELAS", 3], ["PT", 3],
+  ["ODOO", 4], ["BLR", 5], ["MDC", 6], ["BI", 7], ["AUD", 8], ["MC", 9],
+  ["UBEL", 10], ["CH", 11], ["RH", 11], ["DOC", 12], ["DIR", 13],
+]);
+
+function canonicalPillarIndex(document) {
+  const codeMatch = String(document?.code || "").match(/^BES-(\d{2})(?:-|$)/i);
+  if (codeMatch) {
+    const index = Number(codeMatch[1]);
+    if (index >= 0 && index < MODULES.length) return index;
+  }
+  const domain = String(document?.pillar_code || "").toUpperCase();
+  if (PILLAR_ALIASES.has(domain)) return PILLAR_ALIASES.get(domain);
+  const text = `${document?.title || ""} ${document?.module || ""}`.toLowerCase();
+  if (/odoo.*rack|rack.*odoo|mapa maestro de datos/.test(text)) return 6;
+  if (/inventario|almac[eé]n|inbound|outbound|producto terminado|telas/.test(text)) return 3;
+  if (/talento|puesto|capital humano|raci/.test(text)) return 11;
+  if (/auditor|calidad/.test(text)) return 8;
+  if (/mejora|kaizen|5s/.test(text)) return 9;
+  return 0;
+}
+
+function documentApproval(status) {
+  if (["approved", "published"].includes(status)) {
+    return { label: "APROBADO", className: "approved" };
+  }
+  if (["pending_approval", "review"].includes(status)) {
+    return { label: "EN ESPERA DE APROBACIÓN", className: "pending" };
+  }
+  return { label: "BORRADOR", className: "draft" };
+}
+
+function libraryAssetUrl(assetId, action = "download") {
+  const url = new URL(`${SUPABASE_URL}/functions/v1/bes-document-library`);
+  url.searchParams.set("asset_id", assetId);
+  url.searchParams.set("action", action);
+  return url.toString();
+}
+
+async function fetchLibrary(url = `${SUPABASE_URL}/functions/v1/bes-document-library`) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error("La sesión BES expiró.");
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      "x-client-info": `bes-access-portal/${APP_VERSION}`,
+    },
+  });
+  if (!response.ok) throw new Error(`Biblioteca privada: error ${response.status}`);
+  return response;
+}
+
+function assetLabel(asset) {
+  if (asset.mime_type === "text/html") return "Ver HTML";
+  if (asset.mime_type === "text/csv") return "Descargar CSV";
+  if (asset.mime_type === "application/pdf") return "Ver PDF";
+  if (asset.mime_type === "application/json") return "Descargar datos";
+  return asset.label || "Descargar";
+}
+
+async function openLibraryAsset(asset, action = "download") {
+  const placeholder = action === "view" ? window.open("", "_blank") : null;
+  try {
+    if (placeholder) {
+      placeholder.document.title = "Cargando documento BES";
+      placeholder.document.body.textContent = "Cargando documento seguro…";
+    }
+    const response = await fetchLibrary(libraryAssetUrl(asset.id, action));
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    if (action === "view") {
+      if (placeholder) placeholder.location.replace(blobUrl);
+      else window.open(blobUrl, "_blank", "noopener");
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } else {
+      const anchor = document.createElement("a");
+      anchor.href = blobUrl;
+      anchor.download = asset.filename || "documento-bes";
+      anchor.click();
+      URL.revokeObjectURL(blobUrl);
+    }
+    logEvent(`${action === "view" ? "Consultó" : "Descargó"} activo ${asset.filename}`);
+  } catch (error) {
+    if (placeholder) placeholder.close();
+    toast(error.message || "No fue posible abrir el activo.");
+  }
+}
+
+function bindAssetButtons(container = document) {
+  container.querySelectorAll("[data-asset-id]").forEach((button) => {
+    button.onclick = () => {
+      const document = documentLibrary?.documents?.find((item) =>
+        item.assets.some((asset) => asset.id === button.dataset.assetId),
+      );
+      const asset = document?.assets.find((item) => item.id === button.dataset.assetId);
+      if (asset) void openLibraryAsset(asset, button.dataset.assetAction || "download");
+    };
+  });
+}
+
+function renderDocumentLibrary() {
+  const rows = select("#documentRows");
+  const empty = select("#documentEmpty");
+  if (!rows || !empty) return;
+  if (!documentLibrary) {
+    rows.innerHTML = "";
+    empty.textContent = libraryLoading ? "Cargando biblioteca privada…" : "La biblioteca se cargará al autenticar la sesión.";
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  const documents = documentLibrary.documents.map((document) => ({
+    ...document,
+    canonicalPillar: canonicalPillarIndex(document),
+  }));
+  const assetCount = documents.reduce((total, document) => total + document.assets.length, 0);
+  const pendingCount = documents.filter((document) => ["pending_approval", "review"].includes(document.status)).length;
+  select("#libraryDocumentCount").textContent = String(documents.length);
+  select("#libraryAssetCount").textContent = String(assetCount);
+  select("#libraryPendingCount").textContent = String(pendingCount);
+  select("#libraryPillarCount").textContent = `${new Set(documents.map((document) => document.canonicalPillar)).size}/14`;
+
+  const pillarSelect = select("#documentPillarFilter");
+  const selected = documentPillarFilter;
+  pillarSelect.innerHTML = '<option value="all">Todos los pilares</option>' + MODULES.map(
+    (name, index) => `<option value="${index}">Pilar ${String(index).padStart(2, "0")} · ${escapeHTML(name)}</option>`,
+  ).join("");
+  pillarSelect.value = selected;
+
+  select("#pillarCatalog").innerHTML = MODULES.map((name, index) => {
+    const count = documents.filter((document) => document.canonicalPillar === index).length;
+    return `<button class="pillar-chip ${documentPillarFilter === String(index) ? "active" : ""}" type="button" data-pillar-filter="${index}"><span>Pilar ${String(index).padStart(2, "0")}</span><b>${escapeHTML(name)}</b><small>${count} ${count === 1 ? "documento" : "documentos"}</small></button>`;
+  }).join("");
+  selectAll("[data-pillar-filter]").forEach((button) => {
+    button.onclick = () => {
+      documentPillarFilter = button.dataset.pillarFilter;
+      select("#documentPillarFilter").value = documentPillarFilter;
+      renderDocumentLibrary();
+    };
+  });
+
+  const needle = documentSearch.trim().toLowerCase();
+  const filtered = documents.filter((document) =>
+    (documentPillarFilter === "all" || String(document.canonicalPillar) === documentPillarFilter) &&
+    (!needle || `${document.code} ${document.title} ${document.purpose || ""}`.toLowerCase().includes(needle)),
+  );
+  rows.innerHTML = filtered.map((document) => {
+    const approval = documentApproval(document.status);
+    const actions = document.assets.map((asset) => {
+      const action = asset.actions?.view ? "view" : "download";
+      return `<button class="btn secondary" type="button" data-asset-id="${escapeHTML(asset.id)}" data-asset-action="${action}">${escapeHTML(assetLabel(asset))}</button>`;
+    }).join("");
+    return `<tr><td><b>${escapeHTML(document.code)}</b></td><td class="document-title"><b>${escapeHTML(document.title)}</b><small>${escapeHTML(document.purpose || document.scope || "Documento controlado BES")}</small></td><td>Pilar ${String(document.canonicalPillar).padStart(2, "0")}<br><small>${escapeHTML(MODULES[document.canonicalPillar])}</small></td><td>${escapeHTML(document.current_version)}</td><td><span class="approval-badge ${approval.className}">${approval.label}</span></td><td><div class="document-actions">${actions || "Sin activo"}</div></td></tr>`;
+  }).join("");
+  empty.classList.toggle("hidden", filtered.length > 0);
+  if (!filtered.length) empty.textContent = "No hay documentos para este filtro.";
+  bindAssetButtons(select("#documents"));
+}
+
+function renderInventory() {
+  const rows = select("#inventoryRows");
+  const empty = select("#inventoryEmpty");
+  if (!rows || !empty) return;
+  if (!inventorySnapshot) {
+    rows.innerHTML = "";
+    empty.textContent = libraryLoading ? "Cargando inventario seguro…" : "El inventario se cargará desde la biblioteca autenticada.";
+    empty.classList.remove("hidden");
+    return;
+  }
+  const number = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 4 });
+  select("#inventoryDate").textContent = new Date(`${inventorySnapshot.snapshot_date}T12:00:00`).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+  select("#inventoryPairs").textContent = String(inventorySnapshot.sku_unit_pairs);
+  select("#inventoryReconciliation").textContent = `Conciliación ${inventorySnapshot.reconciliation}`;
+  select("#inventoryRowsCount").textContent = number.format(inventorySnapshot.source_rows);
+  rows.innerHTML = inventorySnapshot.items.map((item) => `<tr><td><b>${escapeHTML(item.sku)}</b><small>${escapeHTML(item.product)}</small></td><td>${escapeHTML(item.unit)}</td><td>${number.format(item.quantity)}</td><td>${number.format(item.lines)}</td><td>${escapeHTML(item.locations.join(" · "))}</td></tr>`).join("");
+  empty.classList.toggle("hidden", inventorySnapshot.items.length > 0);
+
+  const inventoryDocument = documentLibrary?.documents?.find((document) => document.code === "BES-04-KDX-001");
+  const visibleAssets = inventoryDocument?.assets || [];
+  select("#inventoryActions").innerHTML = visibleAssets.map((asset) => {
+    const action = asset.actions?.view ? "view" : "download";
+    return `<button class="btn secondary" type="button" data-asset-id="${escapeHTML(asset.id)}" data-asset-action="${action}">${escapeHTML(assetLabel(asset))}</button>`;
+  }).join("");
+  bindAssetButtons(select("#inventory"));
+}
+
+async function loadDocumentLibrary({ force = false } = {}) {
+  if (documentLibrary && !force) return documentLibrary;
+  if (libraryLoading) return libraryLoading;
+  libraryLoading = (async () => {
+    try {
+      const response = await fetchLibrary();
+      documentLibrary = await response.json();
+      const inventoryDocument = documentLibrary.documents?.find((document) => document.code === "BES-04-KDX-001");
+      const dataAsset = inventoryDocument?.assets.find((asset) => asset.mime_type === "application/json");
+      if (dataAsset) {
+        const dataResponse = await fetchLibrary(libraryAssetUrl(dataAsset.id, "download"));
+        inventorySnapshot = await dataResponse.json();
+      } else {
+        inventorySnapshot = null;
+      }
+      renderDocumentLibrary();
+      renderInventory();
+      renderArchitecture();
+      return documentLibrary;
+    } catch (error) {
+      documentLibrary = null;
+      inventorySnapshot = null;
+      const message = error.message || "No fue posible cargar la biblioteca privada.";
+      select("#documentEmpty").textContent = message;
+      select("#inventoryEmpty").textContent = message;
+      toast(message);
+      return null;
+    } finally {
+      libraryLoading = null;
+    }
+  })();
+  renderDocumentLibrary();
+  renderInventory();
+  return libraryLoading;
 }
 
 function roleLabel(membership) {
@@ -1116,6 +1365,7 @@ function enterPortal() {
       : "dashboard";
   showPage(destination);
   if (isOwner()) void loadManagedUsers();
+  void loadDocumentLibrary();
 }
 
 async function signIn(event) {
@@ -1348,14 +1598,15 @@ function bindEvents() {
     renderArchitecture();
     toast("Seguimiento restablecido");
   };
-  selectAll(".private-document").forEach((button) => {
-    button.onclick = () => {
-      logEvent(
-        `Solicitó documento ${button.dataset.docCode}; integración privada pendiente`,
-      );
-      toast("Documento pendiente de integración con Storage privado");
-    };
+  select("#documentSearch").addEventListener("input", (event) => {
+    documentSearch = event.target.value;
+    renderDocumentLibrary();
   });
+  select("#documentPillarFilter").addEventListener("change", (event) => {
+    documentPillarFilter = event.target.value;
+    renderDocumentLibrary();
+  });
+  select("#refreshLibrary").onclick = () => void loadDocumentLibrary({ force: true });
 }
 
 async function initialize() {

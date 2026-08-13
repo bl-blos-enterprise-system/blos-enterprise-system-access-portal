@@ -10,11 +10,13 @@ Portal de acceso del BLOS Enterprise System para Best Linen.
 - MFA obligatorio para roles privilegiados.
 - Perfiles, membresías y datos institucionales protegidos mediante RLS y funciones autenticadas.
 
-La clave incluida en `assets/js/supe-config.js` es publicable y apta para navegador. Nunca debe agregarse una clave `service_role` o secreta al repositorio.
+La clave incluida en `assets/js/supabase-config.js` es publicable y apta para navegador. Nunca debe agregarse una clave `service_role` o secreta al repositorio.
 
 ## Alcance BES
 
 El portal conserva los 14 pilares, las 22 secciones estándar por pilar, el mapa organizacional, la relación Odoo ↔ BL RACKS y el estándar documental de diez secciones.
+
+La biblioteca documental se obtiene de la función autenticada `bes-document-library`. Los metadatos y activos no se incorporan como archivos públicos de GitHub Pages. El inventario consolidado `BES-04-KDX-001-v1.0` se carga desde esa misma biblioteca y conserva su estado de aprobación explícito.
 
 ## Validación local
 
@@ -24,4 +26,3 @@ node tests/smoke.mjs
 ```
 
 Sirve la raíz del repositorio mediante HTTP para la prueba de navegador. Abrir `index.html` como archivo local no es compatible con la autenticación.
-    

@@ -204,7 +204,10 @@
     .integration-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.system-card{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.system-card b{display:block;margin-bottom:4px}.system-card small{color:var(--muted);line-height:1.4}.system-card .defined,.system-card .pending{display:inline-flex;margin-top:10px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:850}.system-card .defined{color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--panel))}.system-card .pending{color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--panel))}
     .flow-table td:first-child{font-weight:850}.flow-table td:nth-child(2){color:var(--brand2);font-weight:800}.controlled-code{margin:0 24px 22px;padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--bg)}.controlled-code code{display:block;margin:7px 0 12px;font-size:clamp(15px,2vw,21px);font-weight:850;color:var(--brand2);overflow-wrap:anywhere}.controlled-code p{margin:0;color:var(--muted);font-size:12px}
     .module-card.structured:before{background:#238d70}.state-pill.structured{color:#087559;background:#e4f6ef;border-color:#89ceb8}
+    .library-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.library-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 260px auto;gap:10px;margin-bottom:18px}.library-toolbar input,.library-toolbar select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font:inherit}.pillar-catalog{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.pillar-chip{padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--panel);color:var(--text);text-align:left;cursor:pointer}.pillar-chip:hover,.pillar-chip.active{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 15%,transparent)}.pillar-chip span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.09em}.pillar-chip b{display:block;margin:4px 0}.pillar-chip small{color:var(--muted)}.document-title{min-width:280px}.document-title b{display:block}.document-title small{display:block;color:var(--muted);margin-top:4px}.document-actions{display:flex;gap:6px;flex-wrap:wrap}.document-actions .btn{padding:7px 9px;font-size:11px}.approval-badge{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:850;white-space:nowrap}.approval-badge.pending{color:#8a5800;background:#fff4d6}.approval-badge.approved{color:#087559;background:#e4f6ef}.approval-badge.draft{color:var(--muted);background:var(--bg)}.inventory-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.inventory-table td:nth-child(3),.inventory-table th:nth-child(3),.inventory-table td:nth-child(4),.inventory-table th:nth-child(4){text-align:right}.inventory-table td:first-child b{display:block}.inventory-table td:first-child small{display:block;color:var(--muted);margin-top:3px;max-width:520px}.library-message{padding:24px;text-align:center;color:var(--muted)}
     @media(max-width:900px){.philosophy-grid,.area-grid{grid-template-columns:1fr}.area-card.wide{grid-column:auto}.integration-strip{grid-template-columns:1fr 1fr}.org-level{width:100%!important}}
+    @media(max-width:1100px){.pillar-catalog{grid-template-columns:repeat(2,1fr)}.library-kpis,.inventory-metrics{grid-template-columns:1fr 1fr}}
+    @media(max-width:700px){.library-toolbar{grid-template-columns:1fr}.pillar-catalog,.library-kpis,.inventory-metrics{grid-template-columns:1fr}}
     @media(max-width:520px){.philosophy-grid,.integration-strip{grid-template-columns:1fr}}
   </style>
 </head>
@@ -294,6 +297,7 @@
         <button data-page="tasks">Agenda operativa</button>
         <button data-page="warehouse">Almacenes BL1–BL5</button>
         <button data-page="documents">Biblioteca documental</button>
+        <button data-page="inventory">Inventario consolidado</button>
         <button data-page="audit">Auditoría</button>
         <button id="usersNav" class="hidden" data-page="users">Usuarios</button>
         <button data-page="settings">Configuración</button>
@@ -455,17 +459,27 @@
               </div>
             </div>
           </article>
-          <div class="notice" style="margin:0 0 18px"><b>Catálogo documental identificado.</b> Los archivos no se publican desde GitHub Pages. Cada acceso permanecerá cerrado hasta completar la integración con Supabase Storage privado, las políticas RLS y las URLs firmadas de corta duración.</div>
-          <div class="card table-wrap"><table class="table"><thead><tr><th>Código</th><th>Documento</th><th>Pilar</th><th>Versión</th><th>Estado</th><th>Archivo</th></tr></thead><tbody>
-            <tr><td>BES-12-STD-001-v1.0</td><td>Estándar maestro de estructura y formato documental</td><td>Control Documental</td><td>1.0</td><td class="status done">Vigente</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-12-STD-001-v1.0">Plantilla controlada · Storage privado</button></td></tr>
-            <tr><td>BES-11-MAN-001-v1.0</td><td>Manual integral — nueve perfiles operativos</td><td>Gestión del Talento</td><td>1.0</td><td class="status">Propuesta para autorización</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-11-MAN-001-v1.0">Pendiente · Storage privado</button></td></tr>
-            <tr><td>BES-11-DIAG-001-v1.0</td><td>Dictamen ejecutivo para creación de puestos</td><td>Gestión del Talento</td><td>1.0</td><td class="status">Propuesta para autorización</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-11-DIAG-001-v1.0">Pendiente · Storage privado</button></td></tr>
-            <tr><td>BES-11-STD-002-v1.0</td><td>Matriz RACI, sistemas y KPIs</td><td>Gestión del Talento</td><td>1.0</td><td class="status">Propuesta para autorización</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-11-STD-002-v1.0">Pendiente · Storage privado</button></td></tr>
-            <tr><td>BES-11-PLA-001-v1.0</td><td>Roadmap de habilitación 30/60/90 días</td><td>Gestión del Talento</td><td>1.0</td><td class="status">Propuesta para autorización</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-11-PLA-001-v1.0">Pendiente · Storage privado</button></td></tr>
-            <tr><td>BES-11-EVID-001-v1.0</td><td>Expediente completo de creación de nueve puestos</td><td>Gestión del Talento</td><td>1.0</td><td class="status done">Paquete controlado</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-11-EVID-001-v1.0">Pendiente · Storage privado</button></td></tr>
-            <tr><td>BES-13-PPT-001-v2.0</td><td>Presentación ejecutiva y organigrama</td><td>Dirección General</td><td>2.0</td><td class="status done">Validado visualmente</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-13-PPT-001-v2.0">Pendiente · Storage privado</button></td></tr>
-            <tr><td>BES-13-EVID-001-v2.0</td><td>Paquete ejecutivo de organigrama y plantilla</td><td>Dirección General</td><td>2.0</td><td class="status done">Evidencia</td><td><button class="doc-link private-document" type="button" data-doc-code="BES-13-EVID-001-v2.0">Pendiente · Storage privado</button></td></tr>
-          </tbody></table></div>
+          <div class="library-kpis">
+            <div class="card stat"><span class="label">Documentos</span><strong id="libraryDocumentCount">—</strong><small>Catálogo BES autenticado</small></div>
+            <div class="card stat"><span class="label">Activos disponibles</span><strong id="libraryAssetCount">—</strong><small>HTML, PDF y fuentes</small></div>
+            <div class="card stat"><span class="label">Pilares visibles</span><strong id="libraryPillarCount">14/14</strong><small>Arquitectura BES</small></div>
+            <div class="card stat"><span class="label">En espera</span><strong id="libraryPendingCount">—</strong><small>Aprobación formal</small></div>
+          </div>
+          <div class="notice" style="margin:0 0 18px"><b>Biblioteca privada conectada.</b> El portal muestra metadatos y activos únicamente después de autenticar la sesión BES. La visibilidad no equivale a aprobación documental.</div>
+          <div class="library-toolbar"><input id="documentSearch" type="search" placeholder="Buscar por código o título" aria-label="Buscar documentos"><select id="documentPillarFilter" aria-label="Filtrar por pilar"><option value="all">Todos los pilares</option></select><button id="refreshLibrary" class="btn secondary" type="button">Actualizar biblioteca</button></div>
+          <div id="pillarCatalog" class="pillar-catalog" aria-label="Catálogo de catorce pilares"></div>
+          <div class="card table-wrap"><table class="table"><thead><tr><th>Código</th><th>Documento</th><th>Pilar BES</th><th>Versión</th><th>Estado</th><th>Activos</th></tr></thead><tbody id="documentRows"></tbody></table><div id="documentEmpty" class="library-message">Cargando biblioteca privada…</div></div>
+        </section>
+        <section id="inventory" class="page">
+          <div class="welcome"><div><div class="eyebrow">Pilar 04 · Odoo Enterprise</div><h2>Inventario consolidado</h2><p>Corte seguro derivado del KARDEX Best Linen, agregado por SKU y unidad de medida.</p></div><div class="date-pill">BES-04-KDX-001-v1.0</div></div>
+          <div class="inventory-metrics">
+            <div class="card stat"><span class="label">Corte</span><strong id="inventoryDate">—</strong><small>Fuente controlada</small></div>
+            <div class="card stat"><span class="label">Pares SKU/UM</span><strong id="inventoryPairs">—</strong><small id="inventoryReconciliation">Conciliación pendiente</small></div>
+            <div class="card stat"><span class="label">Renglones fuente</span><strong id="inventoryRowsCount">—</strong><small>Hoja 30_BES Inventario</small></div>
+            <div class="card stat"><span class="label">Estado documental</span><strong style="font-size:16px">EN ESPERA DE APROBACIÓN</strong><small>No sustituye autorización formal</small></div>
+          </div>
+          <div id="inventoryActions" class="toolbar"></div>
+          <div class="card table-wrap"><table class="table inventory-table"><thead><tr><th>SKU / Producto</th><th>UM</th><th>Cantidad</th><th>Líneas</th><th>Ubicaciones</th></tr></thead><tbody id="inventoryRows"></tbody></table><div id="inventoryEmpty" class="library-message">Cargando inventario seguro…</div></div>
         </section>
         <section id="audit" class="page">
           <div class="welcome"><div><div class="eyebrow">Trazabilidad</div><h2>Auditoría</h2><p>Registro local de actividad del portal.</p></div></div>
