@@ -5,7 +5,7 @@ import {
 
 const { createClient } = globalThis.supabase || {};
 
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.2.1";
 const STORAGE_PREFIX = "besPortalState_v1_7_0";
 const MAX_BACKUP_BYTES = 1_000_000;
 const CONFIG_READY =
@@ -736,8 +736,11 @@ function canonicalPillarIndex(document) {
 }
 
 function documentApproval(status) {
-  if (["approved", "published"].includes(status)) {
+  if (status === "approved") {
     return { label: "APROBADO", className: "approved" };
+  }
+  if (status === "published") {
+    return { label: "PUBLICADO", className: "approved" };
   }
   if (["pending_approval", "review"].includes(status)) {
     return { label: "EN ESPERA DE APROBACIÓN", className: "pending" };
