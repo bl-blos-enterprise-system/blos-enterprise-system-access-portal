@@ -5,7 +5,7 @@ import {
 
 const { createClient } = globalThis.supabase || {};
 
-const APP_VERSION = "2.2.1";
+const APP_VERSION = "2.3.0";
 const STORAGE_PREFIX = "besPortalState_v1_7_0";
 const MAX_BACKUP_BYTES = 1_000_000;
 const CONFIG_READY =
@@ -740,7 +740,7 @@ function documentApproval(status) {
     return { label: "APROBADO", className: "approved" };
   }
   if (status === "published") {
-    return { label: "PUBLICADO", className: "approved" };
+    return { label: "APROBADO Y PUBLICADO", className: "approved" };
   }
   if (["pending_approval", "review"].includes(status)) {
     return { label: "EN ESPERA DE APROBACIÓN", className: "pending" };
@@ -848,10 +848,10 @@ function renderPublicLibrary() {
   }
   const documents = documentLibrary.documents.map((document) => ({ ...document, canonicalPillar: canonicalPillarIndex(document) }));
   const assetCount = documents.reduce((total, document) => total + document.assets.length, 0);
-  const pendingCount = documents.filter((document) => ["pending_approval", "review"].includes(document.status)).length;
+  const approvedCount = documents.filter((document) => document.approved_at && document.approved_by_user_id).length;
   select("#publicDocumentCount").textContent = String(documents.length);
   select("#publicAssetCount").textContent = String(assetCount);
-  select("#publicPendingCount").textContent = String(pendingCount);
+  select("#publicApprovedCount").textContent = String(approvedCount);
   select("#publicPillarCount").textContent = `${new Set(documents.map((document) => document.canonicalPillar)).size}/14`;
   const pillarSelect = select("#publicPillarFilter");
   pillarSelect.innerHTML = '<option value="all">Todos los pilares</option>' + MODULES.map((name, index) => `<option value="${index}">Pilar ${String(index).padStart(2, "0")} · ${escapeHTML(name)}</option>`).join("");
@@ -900,10 +900,10 @@ function renderDocumentLibrary() {
     canonicalPillar: canonicalPillarIndex(document),
   }));
   const assetCount = documents.reduce((total, document) => total + document.assets.length, 0);
-  const pendingCount = documents.filter((document) => ["pending_approval", "review"].includes(document.status)).length;
+  const approvedCount = documents.filter((document) => ["approved", "published"].includes(document.status)).length;
   select("#libraryDocumentCount").textContent = String(documents.length);
   select("#libraryAssetCount").textContent = String(assetCount);
-  select("#libraryPendingCount").textContent = String(pendingCount);
+  select("#libraryApprovedCount").textContent = String(approvedCount);
   select("#libraryPillarCount").textContent = `${new Set(documents.map((document) => document.canonicalPillar)).size}/14`;
 
   const pillarSelect = select("#documentPillarFilter");

@@ -222,9 +222,9 @@
   <section id="publicView" class="public-library">
     <header class="public-header"><div class="public-brand"><img src="assets/bes-login-brand.jpg" alt="Best Linen BES"><div><b>BLOS Enterprise System</b><small>Biblioteca documental pública BES</small></div></div><button id="openLogin" class="btn secondary" type="button">Acceso administrativo</button></header>
     <main class="public-main">
-      <section class="public-hero"><div class="eyebrow">BES MASTER · publicación oficial</div><h1>Documentos de los 14 pilares</h1><p>Consulta pública del catálogo BES, sus versiones vigentes, entregables descargables e inventario consolidado. La publicación no sustituye la aprobación formal indicada en cada registro.</p><div class="public-status"><span>Acceso sin cuenta</span><span>Descarga directa</span><span>14 pilares visibles</span><span>Actualización trazable</span></div></section>
-      <div class="library-kpis"><div class="card stat"><span class="label">Documentos</span><strong id="publicDocumentCount">—</strong><small>Catálogo completo</small></div><div class="card stat"><span class="label">Activos públicos</span><strong id="publicAssetCount">—</strong><small>PDF, HTML, datos y fuentes</small></div><div class="card stat"><span class="label">Pilares</span><strong id="publicPillarCount">—</strong><small>Arquitectura BES</small></div><div class="card stat"><span class="label">En espera</span><strong id="publicPendingCount">—</strong><small>Aprobación formal</small></div></div>
-      <div class="notice" style="margin:0 0 18px"><b>Biblioteca pública activa.</b> Todos los documentos registrados se muestran sin autenticación. Los estados “EN ESPERA DE APROBACIÓN” se conservan hasta contar con evidencia formal.</div>
+      <section class="public-hero"><div class="eyebrow">BES MASTER · publicación oficial</div><h1>Documentos de los 14 pilares</h1><p>Consulta pública del catálogo BES aprobado, sus versiones vigentes, fuentes editables, datos operativos, entregables descargables e inventario consolidado.</p><div class="public-status"><span>Acceso sin cuenta</span><span>Descarga directa</span><span>14 pilares visibles</span><span>Aprobación formal registrada</span></div></section>
+      <div class="library-kpis"><div class="card stat"><span class="label">Documentos</span><strong id="publicDocumentCount">—</strong><small>Catálogo completo</small></div><div class="card stat"><span class="label">Activos públicos</span><strong id="publicAssetCount">—</strong><small>PDF, HTML, datos y fuentes</small></div><div class="card stat"><span class="label">Pilares</span><strong id="publicPillarCount">—</strong><small>Arquitectura BES</small></div><div class="card stat"><span class="label">Aprobados</span><strong id="publicApprovedCount">—</strong><small>Alejandro Martínez</small></div></div>
+      <div class="notice" style="margin:0 0 18px"><b>Biblioteca BES aprobada y pública.</b> Los 60 documentos y los 62 activos vigentes fueron aprobados por Alejandro Martínez y se consultan sin autenticación.</div>
       <div class="library-toolbar"><input id="publicDocumentSearch" type="search" placeholder="Buscar por código o título" aria-label="Buscar documentos públicos"><select id="publicPillarFilter" aria-label="Filtrar por pilar"><option value="all">Todos los pilares</option></select><button id="publicRefreshLibrary" class="btn secondary" type="button">Actualizar</button></div>
       <div id="publicPillarCatalog" class="pillar-catalog" aria-label="Catálogo público de catorce pilares"></div>
       <div class="card table-wrap"><table class="table public-table"><thead><tr><th>Código</th><th>Documento</th><th>Pilar BES</th><th>Versión</th><th>Estado</th><th>Activos públicos</th></tr></thead><tbody id="publicDocumentRows"></tbody></table><div id="publicDocumentEmpty" class="library-message">Cargando biblioteca pública…</div></div>
@@ -481,9 +481,9 @@
             <div class="card stat"><span class="label">Documentos</span><strong id="libraryDocumentCount">—</strong><small>Catálogo BES autenticado</small></div>
             <div class="card stat"><span class="label">Activos disponibles</span><strong id="libraryAssetCount">—</strong><small>HTML, PDF y fuentes</small></div>
             <div class="card stat"><span class="label">Pilares visibles</span><strong id="libraryPillarCount">14/14</strong><small>Arquitectura BES</small></div>
-            <div class="card stat"><span class="label">En espera</span><strong id="libraryPendingCount">—</strong><small>Aprobación formal</small></div>
+            <div class="card stat"><span class="label">Aprobados</span><strong id="libraryApprovedCount">—</strong><small>Alejandro Martínez</small></div>
           </div>
-          <div class="notice" style="margin:0 0 18px"><b>Biblioteca privada conectada.</b> El portal muestra metadatos y activos únicamente después de autenticar la sesión BES. La visibilidad no equivale a aprobación documental.</div>
+          <div class="notice" style="margin:0 0 18px"><b>Biblioteca administrativa conectada.</b> Los documentos tienen aprobación formal registrada y publicación pública; esta vista conserva las funciones internas de administración.</div>
           <div class="library-toolbar"><input id="documentSearch" type="search" placeholder="Buscar por código o título" aria-label="Buscar documentos"><select id="documentPillarFilter" aria-label="Filtrar por pilar"><option value="all">Todos los pilares</option></select><button id="refreshLibrary" class="btn secondary" type="button">Actualizar biblioteca</button></div>
           <div id="pillarCatalog" class="pillar-catalog" aria-label="Catálogo de catorce pilares"></div>
           <div class="card table-wrap"><table class="table"><thead><tr><th>Código</th><th>Documento</th><th>Pilar BES</th><th>Versión</th><th>Estado</th><th>Activos</th></tr></thead><tbody id="documentRows"></tbody></table><div id="documentEmpty" class="library-message">Cargando biblioteca privada…</div></div>
@@ -494,7 +494,7 @@
             <div class="card stat"><span class="label">Corte</span><strong id="inventoryDate">—</strong><small>Fuente controlada</small></div>
             <div class="card stat"><span class="label">Pares SKU/UM</span><strong id="inventoryPairs">—</strong><small id="inventoryReconciliation">Conciliación pendiente</small></div>
             <div class="card stat"><span class="label">Renglones fuente</span><strong id="inventoryRowsCount">—</strong><small>Hoja 30_BES Inventario</small></div>
-            <div class="card stat"><span class="label">Estado documental</span><strong style="font-size:16px">EN ESPERA DE APROBACIÓN</strong><small>No sustituye autorización formal</small></div>
+            <div class="card stat"><span class="label">Estado documental</span><strong style="font-size:16px">APROBADO Y PUBLICADO</strong><small>Alejandro Martínez · 14 ago 2026</small></div>
           </div>
           <div id="inventoryActions" class="toolbar"></div>
           <div class="card table-wrap"><table class="table inventory-table"><thead><tr><th>SKU / Producto</th><th>UM</th><th>Cantidad</th><th>Líneas</th><th>Ubicaciones</th></tr></thead><tbody id="inventoryRows"></tbody></table><div id="inventoryEmpty" class="library-message">Cargando inventario seguro…</div></div>
@@ -557,6 +557,6 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="assets/js/supabase.umd.js"></script>
-  <script type="module" src="assets/js/app.js?v=2.2.1"></script>
+  <script type="module" src="assets/js/app.js?v=2.3.0"></script>
 </body>
 </html>
