@@ -216,6 +216,14 @@
     .public-brand{display:flex;align-items:center;gap:14px}.public-brand img{width:58px;height:58px;object-fit:cover;border-radius:10px}.public-brand b{display:block;font-size:18px}.public-brand small{color:#c8d5e2}
     .public-main{max-width:1440px;margin:auto;padding:clamp(24px,5vw,64px)}.public-hero{margin-bottom:24px}.public-hero h1{margin:5px 0 9px;font-size:clamp(30px,5vw,54px)}.public-hero p{max-width:850px;color:var(--muted);line-height:1.6}
     .public-status{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.public-status span{padding:7px 10px;border-radius:999px;background:#e4f6ef;color:#087559;font-size:11px;font-weight:850}.public-table td{vertical-align:top}.public-table .document-actions a{text-decoration:none}
+    .ubl-public{margin:0 0 22px;padding:clamp(22px,4vw,38px);border-radius:var(--radius);background:linear-gradient(135deg,#07111f 0%,#11375c 65%,#765521 140%);color:#fff;box-shadow:var(--shadow)}
+    .ubl-public h2,.ubl-hero h2{margin:5px 0 10px;font-size:clamp(26px,3.6vw,42px)}.ubl-public p,.ubl-hero p{max-width:900px;color:#cfdae5;line-height:1.6}
+    .ubl-public-grid,.ubl-course-grid,.recognition-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}.ubl-public-card,.recognition-card{padding:16px;border:1px solid rgba(213,175,105,.35);border-radius:14px;background:rgba(255,255,255,.06)}.ubl-public-card b,.recognition-card b{display:block;color:#e5c98e;margin-bottom:5px}.ubl-public-card small,.recognition-card small{color:#cbd7e2;line-height:1.45}
+    .ubl-hero{margin-bottom:18px;padding:clamp(22px,4vw,38px);border-radius:var(--radius);background:linear-gradient(135deg,#07111f,#15456f);color:#fff}.ubl-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.ubl-metric strong{display:block;margin:8px 0;font-size:28px}.ubl-progress-track{height:8px;border-radius:999px;background:var(--line);overflow:hidden}.ubl-progress-track span{display:block;height:100%;background:linear-gradient(90deg,#d5af69,#0d8b6d)}
+    .ubl-course{padding:18px;display:flex;flex-direction:column;gap:10px}.ubl-course .course-number{font-size:11px;font-weight:900;color:#92701e;text-transform:uppercase;letter-spacing:.08em}.ubl-course p{color:var(--muted);line-height:1.5;flex:1}.ubl-course.complete{border-color:#34a98b;background:linear-gradient(180deg,rgba(52,169,139,.11),var(--card))}.ubl-course.complete .course-state{color:#087559;font-weight:850}
+    .ubl-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,.7fr);gap:18px;margin-top:18px}.ubl-assessment{padding:22px}.ubl-question{padding:15px 0;border-bottom:1px solid var(--line)}.ubl-question:last-of-type{border-bottom:0}.ubl-question legend{font-weight:800;margin-bottom:10px}.ubl-options{display:grid;gap:8px}.ubl-options label{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.ubl-result{margin-top:14px;padding:14px;border-radius:11px;background:var(--soft);font-weight:750}.leaderboard-card{padding:22px}.recognition-grid{grid-template-columns:1fr;margin-top:12px}.recognition-card{background:var(--soft);border-color:var(--line)}.recognition-card small{color:var(--muted)}.ubl-history{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ubl-history span{padding:7px 10px;border-radius:999px;background:var(--soft);font-size:12px;font-weight:800}
+    @media(max-width:1050px){.ubl-public-grid,.ubl-course-grid,.ubl-metrics{grid-template-columns:repeat(2,1fr)}.ubl-layout{grid-template-columns:1fr}}
+    @media(max-width:620px){.ubl-public-grid,.ubl-course-grid,.ubl-metrics{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -224,7 +232,8 @@
     <main class="public-main">
       <section class="public-hero"><div class="eyebrow">BES MASTER · publicación oficial</div><h1>Documentos de los 14 pilares</h1><p>Consulta pública del catálogo BES aprobado, sus versiones vigentes, fuentes editables, datos operativos, entregables descargables e inventario consolidado.</p><div class="public-status"><span>Acceso sin cuenta</span><span>Descarga directa</span><span>14 pilares visibles</span><span>Aprobación formal registrada</span></div></section>
       <div class="library-kpis"><div class="card stat"><span class="label">Documentos</span><strong id="publicDocumentCount">—</strong><small>Catálogo completo</small></div><div class="card stat"><span class="label">Activos públicos</span><strong id="publicAssetCount">—</strong><small>PDF, HTML, datos y fuentes</small></div><div class="card stat"><span class="label">Pilares</span><strong id="publicPillarCount">—</strong><small>Arquitectura BES</small></div><div class="card stat"><span class="label">Aprobados</span><strong id="publicApprovedCount">—</strong><small>Alejandro Martínez</small></div></div>
-      <div class="notice" style="margin:0 0 18px"><b>Biblioteca BES aprobada y pública.</b> Los 60 documentos y los 62 activos vigentes fueron aprobados por Alejandro Martínez y se consultan sin autenticación.</div>
+      <section class="ubl-public" aria-labelledby="publicUblTitle"><div class="eyebrow">Universidad Best Linen · desarrollo del talento</div><h2 id="publicUblTitle">Aprender, demostrar y transformar</h2><p>Ruta formativa integrada al modelo BES: el personal completa contenidos controlados, presenta una evaluación calificada en servidor y recibe reconocimientos por resultados comprobados.</p><div class="ubl-public-grid"><article class="ubl-public-card"><b>01 · Arquitectura BES</b><small>Propósito, 14 pilares y gobierno.</small></article><article class="ubl-public-card"><b>02 · Ejecución segura</b><small>Trazabilidad, controles y responsabilidades.</small></article><article class="ubl-public-card"><b>03 · Calidad y evidencia</b><small>Puertas G0–G4 y mejora continua.</small></article><article class="ubl-public-card"><b>04 · Decisión con datos</b><small>Odoo, BL RACKS e indicadores.</small></article></div><div class="public-status"><span>Habilitado BES · 80+</span><span>Distinción Operativa · 90+</span><span>Excelencia UBL · 95+</span><span>Mentor BES · 100 y 3 intentos</span></div></section>
+      <div class="notice" style="margin:0 0 18px"><b>Biblioteca BES aprobada y pública.</b> <span id="publicReleaseSummary">Cargando corte documental vigente…</span></div>
       <div class="library-toolbar"><input id="publicDocumentSearch" type="search" placeholder="Buscar por código o título" aria-label="Buscar documentos públicos"><select id="publicPillarFilter" aria-label="Filtrar por pilar"><option value="all">Todos los pilares</option></select><button id="publicRefreshLibrary" class="btn secondary" type="button">Actualizar</button></div>
       <div id="publicPillarCatalog" class="pillar-catalog" aria-label="Catálogo público de catorce pilares"></div>
       <div class="card table-wrap"><table class="table public-table"><thead><tr><th>Código</th><th>Documento</th><th>Pilar BES</th><th>Versión</th><th>Estado</th><th>Activos públicos</th></tr></thead><tbody id="publicDocumentRows"></tbody></table><div id="publicDocumentEmpty" class="library-message">Cargando biblioteca pública…</div></div>
@@ -314,6 +323,7 @@
         <button data-page="governance">Gobierno BES</button>
         <button data-page="tasks">Agenda operativa</button>
         <button data-page="warehouse">Almacenes BL1–BL5</button>
+        <button data-page="university">Universidad Best Linen</button>
         <button data-page="documents">Biblioteca documental</button>
         <button data-page="inventory">Inventario consolidado</button>
         <button data-page="audit">Auditoría</button>
@@ -343,9 +353,9 @@
           </article>
           <div class="stats">
             <div class="card stat"><span class="label">Tareas completadas</span><strong id="doneStat">0/6</strong><small id="percentStat">0% del plan diario</small><div class="progress"><span id="progressBar" style="width:0"></span></div></div>
-            <div class="card stat"><span class="label">On Time Shipping</span><strong>97.2%</strong><small>Meta ≥ 96%</small></div>
-            <div class="card stat"><span class="label">Exactitud inventario</span><strong>99.1%</strong><small>Último corte operativo</small></div>
-            <div class="card stat"><span class="label">Dock-to-stock</span><strong>38 min</strong><small>Meta ≤ 45 min</small></div>
+            <div class="card stat"><span class="label">Documentos vigentes</span><strong id="dashboardDocumentCount">—</strong><small>Catálogo público comprobado</small></div>
+            <div class="card stat"><span class="label">Avance UBL</span><strong id="dashboardUblProgress">—</strong><small>Ruta formativa personal</small><div class="progress"><span id="dashboardUblProgressBar" style="width:0"></span></div></div>
+            <div class="card stat"><span class="label">Reconocimiento</span><strong id="dashboardUblRecognition" style="font-size:18px">En desarrollo</strong><small id="dashboardUblScore">Sin evaluación registrada</small></div>
           </div>
           <article class="card vision" aria-label="Visión Best Linen">
             <a class="vision-media" href="assets/vision-best-linen.png" target="_blank" rel="noopener" aria-label="Abrir pieza institucional de Best Linen en tamaño completo">
@@ -442,6 +452,34 @@
         <section id="warehouse" class="page">
           <div class="welcome"><div><div class="eyebrow">Red logística</div><h2>Almacenes BL1–BL5</h2><p>Estado operativo consolidado.</p></div></div>
           <div class="card table-wrap"><table class="table"><thead><tr><th>Almacén</th><th>Capacidad</th><th>Ocupación</th><th>Exactitud</th><th>Estado</th></tr></thead><tbody><tr><td>BL1</td><td>1,240 posiciones</td><td>78%</td><td>99.4%</td><td class="status done">Operativo</td></tr><tr><td>BL2</td><td>980 posiciones</td><td>83%</td><td>98.9%</td><td class="status done">Operativo</td></tr><tr><td>BL3</td><td>1,450 posiciones</td><td>72%</td><td>99.2%</td><td class="status done">Operativo</td></tr><tr><td>BL4</td><td>860 posiciones</td><td>91%</td><td>98.7%</td><td class="status">Atención</td></tr><tr><td>BL5</td><td>1,120 posiciones</td><td>68%</td><td>99.5%</td><td class="status done">Operativo</td></tr></tbody></table></div>
+        </section>
+        <section id="university" class="page">
+          <div class="ubl-hero"><div class="eyebrow">Pilar 10 · Universidad Best Linen</div><h2>Crecer personas para transformar procesos</h2><p>Ruta formativa operativa con avance persistente, evaluación segura y reconocimientos derivados únicamente de resultados comprobados.</p></div>
+          <div class="ubl-metrics">
+            <article class="card ubl-metric"><span class="label">Avance curricular</span><strong id="ublProgressPercent">0%</strong><div class="ubl-progress-track"><span id="ublProgressBar" style="width:0"></span></div></article>
+            <article class="card ubl-metric"><span class="label">Mejor evaluación</span><strong id="ublBestScore">—</strong><small>Meta de habilitación: 80</small></article>
+            <article class="card ubl-metric"><span class="label">Intentos registrados</span><strong id="ublAttempts">0</strong><small>Historial trazable</small></article>
+            <article class="card ubl-metric"><span class="label">Reconocimiento actual</span><strong id="ublRecognition" style="font-size:19px">En desarrollo</strong><small>Calculado en servidor</small></article>
+          </div>
+          <div id="ublCourseGrid" class="ubl-course-grid" aria-label="Ruta formativa UBL"></div>
+          <div class="ubl-layout">
+            <form id="ublAssessmentForm" class="card ubl-assessment">
+              <div class="section-head"><div><h3>Evaluación de habilitación BES</h3><span>8 reactivos · mínimo aprobatorio 80</span></div></div>
+              <fieldset class="ubl-question"><legend>1. ¿Qué representa BES?</legend><div class="ubl-options"><label><input type="radio" name="q1" value="a" required> Un archivo de documentos aislados.</label><label><input type="radio" name="q1" value="b"> El sistema empresarial que integra estrategia, procesos, personas, tecnología y mejora.</label><label><input type="radio" name="q1" value="c"> Un software de inventario.</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>2. ¿Cuántos pilares conforman la arquitectura maestra?</legend><div class="ubl-options"><label><input type="radio" name="q2" value="a" required> 10</label><label><input type="radio" name="q2" value="b"> 12</label><label><input type="radio" name="q2" value="c"> 14</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>3. ¿Qué valida una liberación documental?</legend><div class="ubl-options"><label><input type="radio" name="q3" value="a" required> Que exista una carpeta.</label><label><input type="radio" name="q3" value="b"> Controles, evidencia, aprobación y puertas G0–G4.</label><label><input type="radio" name="q3" value="c"> Que el archivo tenga logotipo.</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>4. ¿Cuál es el sistema maestro para compras e inventario?</legend><div class="ubl-options"><label><input type="radio" name="q4" value="a" required> Odoo Enterprise.</label><label><input type="radio" name="q4" value="b"> Correo electrónico.</label><label><input type="radio" name="q4" value="c"> Una hoja local.</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>5. ¿Qué sistema gobierna racks, recepciones y trazabilidad operativa?</legend><div class="ubl-options"><label><input type="radio" name="q5" value="a" required> Canva.</label><label><input type="radio" name="q5" value="b"> Dropbox.</label><label><input type="radio" name="q5" value="c"> BL RACKS.</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>6. ¿Qué debe acompañar a toda decisión operativa?</legend><div class="ubl-options"><label><input type="radio" name="q6" value="a" required> Una opinión sin registro.</label><label><input type="radio" name="q6" value="b"> Datos, responsable, control y evidencia trazable.</label><label><input type="radio" name="q6" value="c"> Una captura sin contexto.</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>7. ¿Cuál es el propósito de Universidad Best Linen?</legend><div class="ubl-options"><label><input type="radio" name="q7" value="a" required> Crecer personas para transformar procesos.</label><label><input type="radio" name="q7" value="b"> Sustituir el trabajo operativo.</label><label><input type="radio" name="q7" value="c"> Publicar certificados sin evaluación.</label></div></fieldset>
+              <fieldset class="ubl-question"><legend>8. ¿Quién calcula la puntuación y el reconocimiento?</legend><div class="ubl-options"><label><input type="radio" name="q8" value="a" required> El navegador del usuario.</label><label><input type="radio" name="q8" value="b"> La persona evaluada.</label><label><input type="radio" name="q8" value="c"> La función segura del servidor.</label></div></fieldset>
+              <button id="ublAssessmentSubmit" class="btn full" type="submit">Enviar evaluación</button><div id="ublAssessmentResult" class="ubl-result hidden" role="status" aria-live="polite"></div>
+            </form>
+            <aside>
+              <article class="card leaderboard-card"><div class="section-head"><div><h3>Reconocimientos</h3><span>Criterios automáticos y auditables</span></div></div><div class="recognition-grid"><div class="recognition-card"><b>Habilitado BES</b><small>Mejor resultado de 80 o más.</small></div><div class="recognition-card"><b>Distinción Operativa</b><small>Mejor resultado de 90 o más.</small></div><div class="recognition-card"><b>Excelencia UBL</b><small>Mejor resultado de 95 o más.</small></div><div class="recognition-card"><b>Mentor BES</b><small>Resultado perfecto y tres intentos registrados.</small></div></div></article>
+              <article class="card leaderboard-card" style="margin-top:18px"><div class="section-head"><div><h3>Personal destacado</h3><span>Visible según permisos de cohorte</span></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Pos.</th><th>Persona</th><th>Mejor</th><th>Reconocimiento</th></tr></thead><tbody id="ublCohortRows"></tbody></table><div id="ublCohortEmpty" class="library-message">Cargando avance…</div></div><div id="ublAttemptHistory" class="ubl-history" aria-label="Historial de evaluaciones"></div></article>
+            </aside>
+          </div>
         </section>
         <section id="documents" class="page">
           <div class="welcome"><div><div class="eyebrow">Control documental</div><h2>Biblioteca</h2><p>Gobierno, trazabilidad y evidencia bajo una norma única de calidad consultiva.</p></div><div class="date-pill">BES-12-STD-001-v1.0</div></div>
@@ -557,6 +595,6 @@
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="assets/js/supabase.umd.js"></script>
-  <script type="module" src="assets/js/app.js?v=2.3.0"></script>
+  <script type="module" src="assets/js/app.js?v=2.4.0"></script>
 </body>
 </html>
