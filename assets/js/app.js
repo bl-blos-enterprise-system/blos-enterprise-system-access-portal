@@ -5,8 +5,8 @@ import {
 
 const { createClient } = globalThis.supabase || {};
 
-const APP_VERSION = "2.3.0";
-const STORAGE_PREFIX = "besPortalState_v1_7_0";
+const APP_VERSION = "2.4.0";
+const STORAGE_PREFIX = "besPortalState_v2_4_0";
 const MAX_BACKUP_BYTES = 1_000_000;
 const CONFIG_READY =
   typeof createClient === "function" &&
@@ -94,6 +94,7 @@ const TITLES = {
   governance: "Gobierno BES",
   tasks: "Agenda operativa",
   warehouse: "Almacenes BL1–BL5",
+  university: "Universidad Best Linen",
   documents: "Biblioteca documental",
   inventory: "Inventario consolidado",
   audit: "Auditoría",
@@ -115,6 +116,28 @@ const MODULES = [
   "Gestión del Talento",
   "Control Documental",
   "Dirección General",
+];
+const UBL_COURSES = [
+  {
+    key: "bes_architecture",
+    title: "Cultura y arquitectura BES",
+    description: "Principio rector, catorce pilares, propósito y gobierno del sistema empresarial.",
+  },
+  {
+    key: "safe_execution",
+    title: "Ejecución segura y trazabilidad",
+    description: "Responsabilidades, controles, evidencia y operación bajo una fuente confiable.",
+  },
+  {
+    key: "quality_evidence",
+    title: "Calidad, mejora y evidencia",
+    description: "Puertas G0–G4, causa raíz, aprendizaje y liberación documental controlada.",
+  },
+  {
+    key: "data_decisions",
+    title: "Odoo ↔ BL RACKS y decisión con datos",
+    description: "Propiedad de información, conciliación e indicadores para decidir con trazabilidad.",
+  },
 ];
 const MODULE_RECOVERY = {
   1: { status: "Estructura integrada", detail: "Metodología rectora alineada con estrategia, procesos, personas, tecnología y mejora continua; desarrollo documental pendiente." },
@@ -203,6 +226,8 @@ let documentSearch = "";
 let documentPillarFilter = "all";
 let publicDocumentSearch = "";
 let publicPillarFilter = "all";
+let ublDashboard = null;
+let ublLoading = null;
 
 function select(selector) {
   return document.querySelector(selector);
@@ -508,6 +533,7 @@ function showPage(id) {
   window.scrollTo(0, 0);
   if (id === "users") void loadManagedUsers();
   if (id === "documents" || id === "inventory") void loadDocumentLibrary();
+  if (id === "dashboard" || id === "university") void loadUblDashboard();
 }
 
 function exportData() {
@@ -709,6 +735,7 @@ function renderAll() {
   renderArchitecture();
   renderDocumentLibrary();
   renderInventory();
+  renderUblDashboard();
 }
 
 const PILLAR_ALIASES = new Map([
@@ -794,7 +821,28 @@ function assetLabel(asset) {
 
 async function openLibraryAsset(asset, action = "download") {
   if (asset.public_url) {
-    window.open(asset.public_url, "_blank", "noopener");
+    if (asset.mime_type !== "text/html") {
+      window.open(asset.public_url, "_blank", "noopener");
+      return;
+    }
+    const placeholder = window.open("", "_blank");
+    try {
+      if (placeholder) {
+        placeholder.document.title = "Cargando documento BES";
+        placeholder.document.body.textContent = "Preparando documento controlado…";
+      }
+      const response = await fetch(asset.public_url, { method: "GET" });
+      if (!response.ok) throw new Error(`Documento público: error ${response.status}`);
+      const html = await response.text();
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const blobUrl = URL.createObjectURL(blob);
+      if (placeholder) placeholder.location.replace(blobUrl);
+      else window.location.assign(blobUrl);
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 120_000);
+    } catch (error) {
+      if (placeholder) placeholder.close();
+      toast(error.message || "No fue posible preparar el documento HTML.");
+    }
     return;
   }
   const placeholder = action === "view" ? window.open("", "_blank") : null;
@@ -853,6 +901,8 @@ function renderPublicLibrary() {
   select("#publicAssetCount").textContent = String(assetCount);
   select("#publicApprovedCount").textContent = String(approvedCount);
   select("#publicPillarCount").textContent = `${new Set(documents.map((document) => document.canonicalPillar)).size}/14`;
+  select("#publicReleaseSummary").textContent = `${documents.length} documentos y ${assetCount} activos vigentes con aprobación formal se consultan sin autenticación.`;
+  select("#dashboardDocumentCount").textContent = String(documents.length);
   const pillarSelect = select("#publicPillarFilter");
   pillarSelect.innerHTML = '<option value="all">Todos los pilares</option>' + MODULES.map((name, index) => `<option value="${index}">Pilar ${String(index).padStart(2, "0")} · ${escapeHTML(name)}</option>`).join("");
   pillarSelect.value = publicPillarFilter;
@@ -875,13 +925,13 @@ function renderPublicLibrary() {
     const approval = documentApproval(document.status);
     const actions = document.assets.map((asset) => {
       const action = asset.actions?.view ? "view" : "download";
-      const href = asset.public_url || libraryAssetUrl(asset.id, action);
-      return `<a class="btn secondary" href="${escapeHTML(href)}" target="_blank" rel="noopener">${escapeHTML(assetLabel(asset))}</a>`;
+      return `<button class="btn secondary" type="button" data-asset-id="${escapeHTML(asset.id)}" data-asset-action="${action}">${escapeHTML(assetLabel(asset))}</button>`;
     }).join("");
     return `<tr><td><b>${escapeHTML(document.code)}</b></td><td class="document-title"><b>${escapeHTML(document.title)}</b><small>${escapeHTML(document.purpose || document.scope || "Documento controlado BES")}</small></td><td>Pilar ${String(document.canonicalPillar).padStart(2, "0")}<br><small>${escapeHTML(MODULES[document.canonicalPillar])}</small></td><td>${escapeHTML(document.current_version)}</td><td><span class="approval-badge ${approval.className}">${approval.label}</span></td><td><div class="document-actions">${actions || "Sin activo"}</div></td></tr>`;
   }).join("");
   empty.classList.toggle("hidden", filtered.length > 0);
   if (!filtered.length) empty.textContent = "No hay documentos para este filtro.";
+  bindAssetButtons(rows);
 }
 
 function renderDocumentLibrary() {
@@ -1026,6 +1076,153 @@ async function loadPublicCatalog({ force = false } = {}) {
   }
 }
 
+function renderUblDashboard() {
+  const courseGrid = select("#ublCourseGrid");
+  if (!courseGrid) return;
+  const self = ublDashboard?.self || null;
+  const progress = self?.course_progress || {};
+  const completed = UBL_COURSES.filter((course) => progress[course.key] === true).length;
+  const percent = Math.round((completed / UBL_COURSES.length) * 100);
+  const bestScore = self?.best_score == null ? null : Number(self.best_score);
+  const recognition = self?.recognition || "En desarrollo";
+
+  select("#ublProgressPercent").textContent = `${percent}%`;
+  select("#ublProgressBar").style.width = `${percent}%`;
+  select("#ublBestScore").textContent = bestScore == null ? "—" : `${bestScore}%`;
+  select("#ublAttempts").textContent = String(self?.attempts_count || 0);
+  select("#ublRecognition").textContent = recognition;
+  select("#dashboardUblProgress").textContent = `${percent}%`;
+  select("#dashboardUblProgressBar").style.width = `${percent}%`;
+  select("#dashboardUblRecognition").textContent = recognition;
+  select("#dashboardUblScore").textContent = bestScore == null
+    ? "Sin evaluación registrada"
+    : `Mejor evaluación: ${bestScore}%`;
+
+  courseGrid.innerHTML = UBL_COURSES.map((course, index) => {
+    const complete = progress[course.key] === true;
+    return `<article class="card ubl-course ${complete ? "complete" : ""}">
+      <span class="course-number">Unidad ${String(index + 1).padStart(2, "0")}</span>
+      <h3>${escapeHTML(course.title)}</h3>
+      <p>${escapeHTML(course.description)}</p>
+      <span class="course-state">${complete ? "Completada y guardada" : "Pendiente"}</span>
+      <button class="btn ${complete ? "secondary" : ""}" type="button" data-ubl-course="${course.key}" ${complete ? "disabled" : ""}>${complete ? "Completada" : "Marcar como completada"}</button>
+    </article>`;
+  }).join("");
+  selectAll("[data-ubl-course]").forEach((button) => {
+    button.onclick = () => void completeUblCourse(button.dataset.ublCourse, button);
+  });
+
+  const cohort = Array.isArray(ublDashboard?.cohort) ? ublDashboard.cohort : [];
+  const cohortRows = select("#ublCohortRows");
+  cohortRows.innerHTML = cohort.map((person, index) => `<tr>
+    <td><b>${index + 1}</b></td>
+    <td><b>${escapeHTML(person.name || "Usuario BES")}</b><small>${escapeHTML(person.role || "Acceso autorizado")}</small></td>
+    <td>${person.best_score == null ? "—" : `${Number(person.best_score)}%`}</td>
+    <td><span class="approval-badge approved">${escapeHTML(person.recognition || "En desarrollo")}</span></td>
+  </tr>`).join("");
+  const cohortEmpty = select("#ublCohortEmpty");
+  cohortEmpty.classList.toggle("hidden", cohort.length > 0);
+  cohortEmpty.textContent = ublLoading
+    ? "Cargando avance del personal…"
+    : "No hay registros visibles para el alcance de tu rol.";
+
+  const attempts = Array.isArray(self?.attempt_history) ? self.attempt_history : [];
+  select("#ublAttemptHistory").innerHTML = attempts
+    .slice(0, 8)
+    .map((attempt) => `<span>${Number(attempt.score)}% · ${new Date(attempt.at).toLocaleDateString("es-MX")}</span>`)
+    .join("");
+}
+
+async function loadUblDashboard({ force = false } = {}) {
+  if (!supabase || !currentUser) return null;
+  if (ublDashboard && !force) {
+    renderUblDashboard();
+    return ublDashboard;
+  }
+  if (ublLoading) return ublLoading;
+  ublLoading = (async () => {
+    try {
+      let { data, error } = await supabase.rpc("get_ubl_dashboard");
+      if (error) throw error;
+      if (!data?.self) {
+        const initialization = await supabase.rpc("save_my_ubl_progress", {
+          p_payload: { course_progress: {} },
+        });
+        if (initialization.error) throw initialization.error;
+        ({ data, error } = await supabase.rpc("get_ubl_dashboard"));
+        if (error) throw error;
+      }
+      ublDashboard = data;
+      return data;
+    } catch (error) {
+      ublDashboard = null;
+      const message = error.message || "No fue posible cargar Universidad Best Linen.";
+      select("#ublCohortEmpty").textContent = message;
+      toast(message);
+      return null;
+    } finally {
+      ublLoading = null;
+      renderUblDashboard();
+    }
+  })();
+  renderUblDashboard();
+  return ublLoading;
+}
+
+async function completeUblCourse(courseKey, button) {
+  if (!UBL_COURSES.some((course) => course.key === courseKey)) return;
+  button.disabled = true;
+  try {
+    const courseProgress = {
+      ...(ublDashboard?.self?.course_progress || {}),
+      [courseKey]: true,
+    };
+    const { error } = await supabase.rpc("save_my_ubl_progress", {
+      p_payload: { course_progress: courseProgress },
+    });
+    if (error) throw error;
+    ublDashboard = null;
+    await loadUblDashboard({ force: true });
+    logEvent(`Completó unidad UBL: ${courseKey}`);
+    toast("Avance UBL guardado");
+  } catch (error) {
+    button.disabled = false;
+    toast(error.message || "No fue posible guardar el avance UBL.");
+  }
+}
+
+async function submitUblAssessment(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = select("#ublAssessmentSubmit");
+  const result = select("#ublAssessmentResult");
+  const formData = new FormData(form);
+  const answers = Array.from({ length: 8 }, (_, index) => formData.get(`q${index + 1}`));
+  if (answers.some((answer) => !answer)) {
+    result.textContent = "Responde los ocho reactivos antes de enviar.";
+    result.classList.remove("hidden");
+    return;
+  }
+  button.disabled = true;
+  result.textContent = "Calificando en servidor…";
+  result.classList.remove("hidden");
+  try {
+    const { data, error } = await supabase.rpc("submit_ubl_assessment", {
+      p_answers: answers,
+    });
+    if (error) throw error;
+    result.textContent = `${data.passed ? "Evaluación aprobada" : "Evaluación no aprobada"}: ${Number(data.score)}% (${data.correct}/8). Reconocimiento: ${data.recognition}.`;
+    ublDashboard = null;
+    await loadUblDashboard({ force: true });
+    logEvent(`Presentó evaluación UBL: ${Number(data.score)}%`);
+    form.reset();
+  } catch (error) {
+    result.textContent = error.message || "No fue posible registrar la evaluación.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function roleLabel(membership) {
   const labels = {
     owner: "Propietario y creador",
@@ -1122,6 +1319,8 @@ function clearRuntimeIdentity() {
   state = null;
   managedUsers = [];
   managedUsersLoading = false;
+  ublDashboard = null;
+  ublLoading = null;
   authEvaluation += 1;
 }
 
@@ -1455,6 +1654,7 @@ function enterPortal() {
   showPage(destination);
   if (isOwner()) void loadManagedUsers();
   void loadDocumentLibrary();
+  void loadUblDashboard();
 }
 
 async function signIn(event) {
@@ -1637,6 +1837,7 @@ function bindEvents() {
   select("#mfaLogout").onclick = signOut;
   select("#passwordForm").addEventListener("submit", changePassword);
   select("#provisionUserForm").addEventListener("submit", provisionUser);
+  select("#ublAssessmentForm").addEventListener("submit", submitUblAssessment);
   select("#refreshUsers").onclick = () => void loadManagedUsers();
   select("#mfaEnrollBtn").onclick = startMfaEnrollment;
   select("#mfaSetupForm").addEventListener("submit", (event) => {
